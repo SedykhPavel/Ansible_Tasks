@@ -1,0 +1,42 @@
+---
+- name: Nginx Setup
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install nginx with retries
+      shell: apk add nginx
+      register: result
+      until: result.rc == 0
+      retries: 5
+      delay: 3
+
+    # --- Настройка WEB-серверов (web1, web2) ---
+
+    - name: Setup Web Nodes Config
+      template:
+        src: templates/web.conf.j2
+        dest: /etc/nginx/http.d/default.conf
+      when: "'web_nodes' in group_names"
+      notify: Restart Nginx
+
+    # --- Настройка Балансировщика (rrobin) ---
+    - name: Setup Round Robin Config
+      template:
+        src: templates/lb.conf.j2
+        dest: /etc/nginx/http.d/default.conf
+      when: "'balancers' in group_names"
+      notify: Restart Nginx
+
+    - name: Generate nginx config using custom module
+      nginx_port:
+        port: 8081
+        dest: /etc/nginx/http.d/custom_mod.conf 
+      when: "'balancers' in group_names"       
+      notify: Restart Nginx 
+      
+  handlers:
+    - name: Restart Nginx
+      shell: |
+        mkdir -p /run/nginx
+        nginx -t && (nginx -s reload || nginx)

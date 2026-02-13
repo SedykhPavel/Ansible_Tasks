@@ -1,0 +1,31 @@
+services:
+  rrobin:
+      build: 
+        context: .
+        dockerfile: dockerfile
+      ports:
+          - "8080:8080"
+      networks:
+        net_ans:
+            ipv4_address: 192.168.10.12
+  web1:
+      build: 
+        context: .
+        dockerfile: dockerfile
+      networks:
+        net_ans:
+            ipv4_address: 192.168.10.13
+  web2:
+      build:
+        context: .
+        dockerfile: dockerfile
+      networks:
+        net_ans:
+            ipv4_address: 192.168.10.14
+
+networks:
+    net_ans:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 192.168.10.0/24

@@ -1,0 +1,19 @@
+---
+- name: Creating Files
+  hosts: web-nodes
+  become: yes
+
+  tasks:
+    - name: Create static directory
+      file:
+        path: /var/www/files/
+        state: directory
+        owner: nginx
+        group: nginx
+        mode: '0755'
+        recurse: yes
+    
+    - name: Copy static files
+      copy:
+        src: files/
+        dest: /var/www/files/
